@@ -5,6 +5,6 @@ import (
 )
 
 type Client interface {
-	SendMessage(message, author string) (types.Message, error)
+	SendMessage(author, content string) (types.Message, error)
 	Connect() error
 }

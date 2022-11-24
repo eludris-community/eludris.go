@@ -18,6 +18,9 @@ func onMessage(msg events.MessageEvent) {
 		return
 	}
 
+	if msg.Content == "I am the fastest." {
+		c.SendMessage("I am the strongest.", "hello")
+	}
 	_, err := c.SendMessage("hewwo from gowang", "hello")
 	if err != nil {
 		panic(err)
