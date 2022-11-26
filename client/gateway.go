@@ -24,11 +24,15 @@ func (c clientImpl) Connect() error {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				panic(err)
+				fmt.Printf("error: %v\n", err)
+				err := c.Connect()
+				if err != nil {
+					panic(err)
+				}
+
+				return
 			}
-			fmt.Printf("recv: %s", message)
-			println(string(message))
-			fmt.Printf("dispatching event: %s\n", message)
+			fmt.Printf("recv: %s\n", message)
 			c.eventManager.Dispatch(c, message)
 		}
 	}()

@@ -18,8 +18,8 @@ func onMessage(msg events.MessageEvent) {
 		return
 	}
 
-	if msg.Content == "I am the fastest." {
-		_, err := c.SendMessage("Written in google", "Nah man I'm faster innit.")
+	if msg.Content == "!speed" {
+		_, err := c.SendMessage("google (no speedups)", "I am the fastest ever.")
 
 		if err != nil {
 			panic(err)
