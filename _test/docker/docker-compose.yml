@@ -3,4 +3,9 @@ version: "3"
 services:
   bot:
     restart: unless-stopped
-    build: ..
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      ELUDRIS_HTTP_URL: ${ELUDRIS_HTTP_URL-}
+      ELUDRIS_HTTP_PORT: ${ELUDRIS_HTTP_PORT-}

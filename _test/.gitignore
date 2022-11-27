@@ -1,6 +1,1 @@
-*
-!main.go
-!Dockerfile
-!docker-compose.yml
-!.gitignore
-!docker/
+_test

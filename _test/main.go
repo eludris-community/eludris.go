@@ -28,9 +28,12 @@ func onMessage(msg events.MessageEvent) {
 }
 
 func main() {
+	HTTPUrl := os.Getenv("ELUDRIS_HTTP_URL")
+	WSUrl := os.Getenv("ELUDRIS_WS_URL")
+
 	manager := events.NewEventManager()
 	manager.Subscribe(onMessage)
-	c := client.New(client.Config{EventManager: manager})
+	c := client.New(client.Config{HTTPUrl: HTTPUrl, WSUrl: WSUrl, EventManager: manager})
 	err := c.Connect()
 
 	if err != nil {
