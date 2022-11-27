@@ -19,7 +19,7 @@ func (c clientImpl) request(method, path string, data any, obj any) error {
 		return err
 	}
 
-	uri, err := url.Parse(fmt.Sprintf("%s/messages/\n", c.httpUrl))
+	uri, err := url.Parse(fmt.Sprintf("%s/messages/", c.httpUrl))
 
 	if err != nil {
 		return err
