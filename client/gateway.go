@@ -42,7 +42,8 @@ func (c clientImpl) Connect() error {
 
 func ping(conn *websocket.Conn) {
 	for {
-		time.Sleep(20 * time.Second)
+		fmt.Printf("pls\n")
+		time.Sleep(19 * time.Second)
 		conn.WriteMessage(websocket.PingMessage, []byte{})
 	}
 }
