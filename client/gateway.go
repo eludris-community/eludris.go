@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/ooliver1/eludris.go/events"
 )
 
 func (c clientImpl) Connect() error {
@@ -15,10 +16,16 @@ func (c clientImpl) Connect() error {
 	}
 
 	done := make(chan struct{})
+	pongs := make(chan struct{})
+
+	dispatchPing := func(*events.PongEvent) {
+		pongs <- struct{}{}
+	}
 
 	go func() {
 		defer close(done)
-		go ping(conn)
+		events.Subscribe(c.eventManager, dispatchPing)
+		go ping(conn, pongs)
 		defer conn.Close()
 
 		for {
@@ -40,10 +47,17 @@ func (c clientImpl) Connect() error {
 	return nil
 }
 
-func ping(conn *websocket.Conn) {
+func ping(conn *websocket.Conn, pongs chan struct{}) {
 	for {
-		fmt.Printf("pls\n")
-		time.Sleep(19 * time.Second)
-		conn.WriteMessage(websocket.PingMessage, []byte{})
+		time.Sleep(44 * time.Second)
+		conn.WriteMessage(websocket.TextMessage, []byte("{\"op\": \"PING\"}"))
+
+		select {
+
+		case <-pongs:
+			continue
+		case <-time.After(1 * time.Second):
+			conn.Close()
+		}
 	}
 }

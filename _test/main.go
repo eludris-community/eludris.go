@@ -11,7 +11,7 @@ import (
 	"github.com/ooliver1/eludris.go/events"
 )
 
-func onMessage(msg events.MessageEvent) {
+func onMessage(msg *events.MessageEvent) {
 	c := msg.Client()
 
 	if msg.Author == "hello" {
@@ -19,7 +19,7 @@ func onMessage(msg events.MessageEvent) {
 	}
 
 	if msg.Content == "!speed" {
-		_, err := c.SendMessage("google (no speedups)", "I am the fastest ever.")
+		_, err := c.SendMessage("googwuki", "I am the fastest ever.")
 
 		if err != nil {
 			panic(err)
@@ -32,7 +32,7 @@ func main() {
 	WSUrl := os.Getenv("ELUDRIS_WS_URL")
 
 	manager := events.NewEventManager()
-	manager.Subscribe(onMessage)
+	events.Subscribe(manager, onMessage)
 	c := client.New(client.Config{HTTPUrl: HTTPUrl, WSUrl: WSUrl, EventManager: manager})
 	err := c.Connect()
 

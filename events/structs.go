@@ -4,20 +4,39 @@ import (
 	"github.com/ooliver1/eludris.go/interfaces"
 )
 
-type Event struct {
+type Event interface {
+	Op() string
+	Client() interfaces.Client
+	SetClient(interfaces.Client)
+}
+
+type event struct {
 	client interfaces.Client
 }
 
-func (e *Event) Client() interfaces.Client {
+func (e event) Client() interfaces.Client {
 	return e.client
 }
 
-func (e *Event) SetClient(client interfaces.Client) {
+func (e *event) SetClient(client interfaces.Client) {
 	e.client = client
 }
 
 type MessageEvent struct {
-	Event
-	Content string `json:"content"`
-	Author  string `json:"author"`
+	event
+	Content string `mapstructure:"content"`
+	Author  string `mapstructure:"author"`
+}
+
+func (*MessageEvent) Op() string {
+	return "MESSAGE_CREATE"
+}
+
+// Pong has no inner data.
+type PongEvent struct {
+	event
+}
+
+func (*PongEvent) Op() string {
+	return "PONG"
 }

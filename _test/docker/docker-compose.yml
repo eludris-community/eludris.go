@@ -8,4 +8,4 @@ services:
       dockerfile: docker/Dockerfile
     environment:
       ELUDRIS_HTTP_URL: ${ELUDRIS_HTTP_URL-}
-      ELUDRIS_HTTP_PORT: ${ELUDRIS_HTTP_PORT-}
+      ELUDRIS_WS_URL: ${ELUDRIS_WS_URL-}
