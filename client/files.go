@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ooliver1/eludris.go/types"
+	"github.com/eludris-community/eludris.go/types"
 )
 
 func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (types.FileData, error) {

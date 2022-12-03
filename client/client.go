@@ -3,8 +3,8 @@ package client
 import (
 	"net/http"
 
-	"github.com/ooliver1/eludris.go/events"
-	"github.com/ooliver1/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/events"
+	"github.com/eludris-community/eludris.go/interfaces"
 )
 
 type clientImpl struct {

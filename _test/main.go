@@ -7,8 +7,8 @@ import (
 	"os/signal" // whatsapp
 	"syscall"
 
-	"github.com/ooliver1/eludris.go/client"
-	"github.com/ooliver1/eludris.go/events"
+	"github.com/eludris-community/eludris.go/client"
+	"github.com/eludris-community/eludris.go/events"
 )
 
 func onMessage(msg *events.MessageEvent) {

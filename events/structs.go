@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/ooliver1/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/interfaces"
 )
 
 type Event interface {

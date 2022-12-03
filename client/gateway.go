@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eludris-community/eludris.go/events"
 	"github.com/gorilla/websocket"
-	"github.com/ooliver1/eludris.go/events"
 )
 
 func (c clientImpl) Connect() error {

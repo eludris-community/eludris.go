@@ -11,7 +11,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ooliver1/eludris.go/types"
+	"github.com/eludris-community/eludris.go/types"
 )
 
 type RequestType int

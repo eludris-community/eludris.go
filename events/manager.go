@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/eludris-community/eludris.go/interfaces"
 	"github.com/mitchellh/mapstructure"
-	"github.com/ooliver1/eludris.go/interfaces"
 )
 
 type EventListener interface {
@@ -75,8 +75,8 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 	op := msg["op"].(string)
 	innerData := msg["d"]
 	if innerData == nil {
-        innerData = make(map[string]any)
-    }
+		innerData = make(map[string]any)
+	}
 
 	subscribers := m.subscribers[op]
 
