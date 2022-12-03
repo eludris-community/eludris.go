@@ -5,56 +5,114 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/ooliver1/eludris.go/types"
 )
 
-func (c clientImpl) request(method, path string, data any, obj any) error {
-	payload, err := json.Marshal(data)
+type RequestType int
 
-	if err != nil {
-		return err
+const (
+	Oprish RequestType = iota
+	Effis
+)
+
+type Data struct {
+	Json     any
+	FormData map[string]io.Reader
+}
+
+func (c clientImpl) request(reqType RequestType, method, path string, data Data, obj any) (*http.Response, error) {
+	// payload, err := json.Marshal(data)
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	var base string
+	switch reqType {
+	case Oprish:
+		base = c.httpUrl
+	case Effis:
+		base = c.fileUrl
 	}
 
-	uri, err := url.Parse(fmt.Sprintf("%s/messages/", c.httpUrl))
+	uri, err := url.Parse(base + path)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Printf("Sending %s request to %s with payload %s\n", method, uri.String(), string(payload))
+	fmt.Printf("Sending %s request to %s\n", method, uri.String())
 
 	req := http.Request{
 		Method: method,
 		URL:    uri,
-		Header: map[string][]string{
-			"Content-Type": {"application/json"},
-		},
-		Body: io.NopCloser(bytes.NewBuffer(payload)),
+		Header: make(map[string][]string),
+	}
+
+	if data.Json != nil {
+		req.Header.Set("Content-Type", "application/json")
+		payload, err := json.Marshal(data.Json)
+
+		if err != nil {
+			return nil, err
+		}
+
+		req.Body = io.NopCloser(bytes.NewBuffer(payload))
+	} else if data.FormData != nil {
+		var b bytes.Buffer
+		w := multipart.NewWriter(&b)
+		for key, r := range data.FormData {
+			var writer io.Writer
+			if x, ok := r.(io.Closer); ok {
+				defer x.Close()
+			}
+			// Add an image file
+			if file, ok := r.(*os.File); ok {
+				if writer, err = w.CreateFormFile(key, file.Name()); err != nil {
+					return nil, err
+				}
+			} else {
+				// Add other fields
+				if writer, err = w.CreateFormField(key); err != nil {
+					return nil, err
+				}
+			}
+			if _, err = io.Copy(writer, r); err != nil {
+				return nil, err
+			}
+		}
+
+		w.Close()
+
+		req.Header.Set("Content-Type", w.FormDataContentType())
+		req.Body = io.NopCloser(&b)
 	}
 
 	for {
 		res, err := c.httpClient.Do(&req)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		defer res.Body.Close()
 		switch res.StatusCode {
 		case 200:
 			json.NewDecoder(res.Body).Decode(&obj)
-			return nil
+			return res, nil
 		case 429:
 			var ratelimit types.RateLimit
 			json.NewDecoder(res.Body).Decode(&ratelimit)
 			retry_after := ratelimit.Data.RetryAfter
 			time.Sleep(time.Duration(retry_after) * time.Millisecond)
 		default:
-			return fmt.Errorf("error sending message: %s", res.Status)
+			return nil, fmt.Errorf("error sending message: %s", res.Status)
 		}
 	}
 }

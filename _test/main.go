@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	// "time"
 	"os"
 	"os/signal" // whatsapp
@@ -18,9 +18,26 @@ func onMessage(msg *events.MessageEvent) {
 		return
 	}
 
-	if msg.Content == "!speed" {
+	switch msg.Content {
+	case "!speed":
 		_, err := c.SendMessage("googwuki", "I am the fastest ever.")
 
+		if err != nil {
+			panic(err)
+		}
+	case "!cat":
+		file, err := os.Open("cat.jpg")
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+
+		data, err := c.UploadAttachment(file, false)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = c.SendMessage("googwuki", fmt.Sprintf("https://cdn.eludris.gay/%s", data.Id))
 		if err != nil {
 			panic(err)
 		}

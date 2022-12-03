@@ -6,7 +6,7 @@ func (c clientImpl) SendMessage(author, content string) (types.Message, error) {
 	msg := types.Message{Author: author, Content: content}
 
 	var res types.Message
-	err := c.request("POST", "/messages/", msg, &res)
+	_, err := c.request(Oprish, "POST", "/messages/", Data{Json: msg}, &res)
 
 	return res, err
 }
