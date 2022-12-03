@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package client
 
 import "github.com/eludris-community/eludris.go/types"
