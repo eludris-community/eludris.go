@@ -1,0 +1,28 @@
+on:
+  push:
+    branches:
+      - master
+
+name: release-please
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: go
+          token: ${{ secrets.RELEASE_TOKEN }}
+      - name: Parse semver string
+        if: steps.release.outputs.release_created
+        id: semver_parser
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: ${{ steps.release.outputs.tag_name }}
+      - name: Mark as pre-release
+        if: ${{ ((steps.semver_parser.outputs.prerelease != '') || (steps.semver_parser.outputs.major == '0')) && steps.release.outputs.release_created }}
+        uses: tubone24/update_release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        with:
+          prerelease: true
