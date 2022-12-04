@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 
+// Package interfaces provides interfaces for the Eludris API.
 package interfaces
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/eludris-community/eludris.go/types"
 )
 
+// Client represents a client for Eludris, with functions to interact with the API.
 type Client interface {
 	Connect() error
 

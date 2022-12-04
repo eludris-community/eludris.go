@@ -38,6 +38,7 @@ func (l eventListener[E]) Handle(event Event) {
 	}
 }
 
+// EventManager manages events, allowing you to subscribe to them.
 type EventManager interface {
 	Subscribe(EventListener)
 	Dispatch(interfaces.Client, []byte)
@@ -47,6 +48,8 @@ type managerImpl struct {
 	subscribers map[string][]EventListener
 }
 
+// Subscribe allows you to subscribe to an event to the given manager.
+// This infers the event type from the function signature.
 func Subscribe[E Event](m EventManager, subscriber func(E)) {
 	t := reflect.TypeOf(subscriber)
 	eventT := t.In(0)
@@ -111,6 +114,7 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 	}
 }
 
+// NewEventManager creates a new event manager.
 func NewEventManager() EventManager {
 	return &managerImpl{subscribers: make(map[string][]EventListener)}
 }

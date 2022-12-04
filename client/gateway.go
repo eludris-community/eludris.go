@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Connect connects to the Eludris websocket for events.
 func (c clientImpl) Connect() error {
 	conn, _, err := websocket.DefaultDialer.Dial(c.wsUrl, nil)
 

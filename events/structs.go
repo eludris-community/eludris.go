@@ -6,6 +6,7 @@ import (
 	"github.com/eludris-community/eludris.go/interfaces"
 )
 
+// Event represents the base fields for all events.
 type Event interface {
 	Op() string
 	Client() interfaces.Client
@@ -24,6 +25,7 @@ func (e *event) SetClient(client interfaces.Client) {
 	e.client = client
 }
 
+// MessageEvent represents a received message from Eludris.
 type MessageEvent struct {
 	event
 	Content string `mapstructure:"content"`
@@ -34,7 +36,6 @@ func (*MessageEvent) Op() string {
 	return "MESSAGE_CREATE"
 }
 
-// Pong has no inner data.
 type PongEvent struct {
 	event
 }

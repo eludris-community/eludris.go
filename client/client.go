@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 
+// Package client provides a client for the Eludris API.
 package client
 
 import (
@@ -17,6 +18,7 @@ type clientImpl struct {
 	eventManager events.EventManager
 }
 
+// New creates a new client.
 func New(config Config) interfaces.Client {
 	if config.HTTPUrl == "" {
 		config.HTTPUrl = "https://api.eludris.gay"
