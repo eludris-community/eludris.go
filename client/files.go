@@ -8,17 +8,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eludris-community/eludris.go/types"
+	"github.com/eludris-community/eludris-api-types.go/effis"
 )
 
 // UploadAttachment uploads an attachment to the file server.
-func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (types.FileData, error) {
+func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (effis.FileData, error) {
 	return c.UploadFile("attachments", file, spoiler)
 }
 
 // UploadStaticFile uploads a file to the file server with the chosen "bucket".
-func (c clientImpl) UploadFile(bucket string, file io.Reader, spoiler bool) (types.FileData, error) {
-	var res types.FileData
+func (c clientImpl) UploadFile(bucket string, file io.Reader, spoiler bool) (effis.FileData, error) {
+	var res effis.FileData
 	_, err := c.request(
 		Effis,
 		"POST",
@@ -46,13 +46,13 @@ func (c clientImpl) FetchFile(bucket, id string) (io.ReadCloser, error) {
 }
 
 // FetchAttachmentData fetches the metadata of an attachment.
-func (c clientImpl) FetchAttachmentData(id string) (types.FileData, error) {
+func (c clientImpl) FetchAttachmentData(id string) (effis.FileData, error) {
 	return c.FetchFileData("attachments", id)
 }
 
 // FetchFileData fetches the metadata of a file.
-func (c clientImpl) FetchFileData(bucket, id string) (types.FileData, error) {
-	var res types.FileData
+func (c clientImpl) FetchFileData(bucket, id string) (effis.FileData, error) {
+	var res effis.FileData
 	_, err := c.request(Effis, "GET", fmt.Sprintf("/%s/%s", bucket, id), Data{}, &res)
 
 	return res, err

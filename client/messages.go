@@ -2,13 +2,13 @@
 
 package client
 
-import "github.com/eludris-community/eludris.go/types"
+import "github.com/eludris-community/eludris-api-types.go/oprish"
 
 // SendMessage sends a message to Eludris.
-func (c clientImpl) SendMessage(author, content string) (types.Message, error) {
-	msg := types.Message{Author: author, Content: content}
+func (c clientImpl) SendMessage(author, content string) (oprish.Message, error) {
+	msg := oprish.Message{Author: author, Content: content}
 
-	var res types.Message
+	var res oprish.Message
 	_, err := c.request(Oprish, "POST", "/messages/", Data{Json: msg}, &res)
 
 	return res, err

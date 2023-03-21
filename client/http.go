@@ -11,9 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
-
-	"github.com/eludris-community/eludris.go/types"
 )
 
 type RequestType int
@@ -109,9 +108,8 @@ func (c clientImpl) request(reqType RequestType, method, path string, data Data,
 			json.NewDecoder(res.Body).Decode(&obj)
 			return res, nil
 		case 429:
-			var ratelimit types.RateLimit
-			json.NewDecoder(res.Body).Decode(&ratelimit)
-			retry_after := ratelimit.Data.RetryAfter
+			// TODO: Better ratelimiting using proper headers.
+			retry_after, _ := strconv.Atoi(res.Header.Get("X-RateLimit-Reset"))
 			time.Sleep(time.Duration(retry_after) * time.Millisecond)
 		default:
 			return nil, fmt.Errorf("error sending message: %s", res.Status)

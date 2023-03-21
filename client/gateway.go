@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/eludris-community/eludris.go/events"
+	"github.com/eludris-community/eludris.go/interfaces"
 	"github.com/gorilla/websocket"
 )
 
@@ -21,13 +22,13 @@ func (c clientImpl) Connect() error {
 	done := make(chan struct{})
 	pongs := make(chan struct{})
 
-	dispatchPing := func(*events.PongEvent) {
+	dispatchPong := func(*events.PongEvent, interfaces.Client) {
 		pongs <- struct{}{}
 	}
 
 	go func() {
 		defer close(done)
-		events.Subscribe(c.eventManager, dispatchPing)
+		events.Subscribe(c.eventManager, dispatchPong)
 		go ping(conn, pongs)
 		defer conn.Close()
 
