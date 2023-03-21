@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -48,7 +49,7 @@ func (c clientImpl) request(reqType RequestType, method, path string, data Data,
 		return nil, err
 	}
 
-	fmt.Printf("Sending %s request to %s\n", method, uri.String())
+	log.Printf("Sending %s request to %s\n", method, uri.String())
 
 	req := http.Request{
 		Method: method,
