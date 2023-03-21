@@ -13,28 +13,28 @@ import (
 )
 
 type EventListener interface {
-	Handle(Event)
+	Handle(Event, interfaces.Client)
 	Op() string
-	Func() func(Event)
+	Func() func(Event, interfaces.Client)
 }
 
 type eventListener[E Event] struct {
 	op string
-	f  func(E)
+	f  func(E, interfaces.Client)
 }
 
 func (e eventListener[E]) Op() string {
 	return e.op
 }
 
-func (e eventListener[E]) Func() func(Event) {
-	// THe pain behind it all.
-	return any(e.f).(func(Event))
+func (e eventListener[E]) Func() func(Event, interfaces.Client) {
+	// Turn the inner function into a normal `Event` from `E`.
+	return any(e.f).(func(Event, interfaces.Client))
 }
 
-func (l eventListener[E]) Handle(event Event) {
+func (l eventListener[E]) Handle(event Event, client interfaces.Client) {
 	if event, ok := event.(E); ok {
-		l.f(event)
+		l.f(event, client)
 	}
 }
 
@@ -50,10 +50,11 @@ type managerImpl struct {
 
 // Subscribe allows you to subscribe to an event to the given manager.
 // This infers the event type from the function signature.
-func Subscribe[E Event](m EventManager, subscriber func(E)) {
+func Subscribe[E Event](m EventManager, subscriber func(E, interfaces.Client)) {
 	t := reflect.TypeOf(subscriber)
 	eventT := t.In(0)
 
+	// Get the actual Op() method.
 	for i := 0; i < eventT.NumMethod(); i++ {
 		method := eventT.Method(i)
 		if method.Name == "Op" {
@@ -66,20 +67,23 @@ func Subscribe[E Event](m EventManager, subscriber func(E)) {
 }
 
 func (m *managerImpl) Subscribe(listener EventListener) {
+	// Create the slice if it doesn't exist.
 	if _, ok := m.subscribers[listener.Op()]; !ok {
-		m.subscribers[listener.Op()] = []EventListener{}
+		m.subscribers[listener.Op()] = make([]EventListener, 0)
 	}
 
 	m.subscribers[listener.Op()] = append(m.subscribers[listener.Op()], listener)
 }
 
 func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
+	// Treat it as a map at first.
 	var msg map[string]any
 	json.NewDecoder(bytes.NewBuffer(data)).Decode(&msg)
 
 	op := msg["op"].(string)
 	innerData := msg["d"]
 	if innerData == nil {
+		// This is the actual data we want to decode.
 		innerData = make(map[string]any)
 	}
 
@@ -107,10 +111,8 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 		return
 	}
 
-	event.SetClient(client)
-
 	for _, subscriber := range subscribers {
-		subscriber.Handle(event)
+		subscriber.Handle(event, client)
 	}
 }
 

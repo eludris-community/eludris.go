@@ -11,11 +11,10 @@ import (
 
 	"github.com/eludris-community/eludris.go/client"
 	"github.com/eludris-community/eludris.go/events"
+	"github.com/eludris-community/eludris.go/interfaces"
 )
 
-func onMessage(msg *events.MessageEvent) {
-	c := msg.Client()
-
+func onMessage(msg *events.MessageEvent, c interfaces.Client) {
 	if msg.Author == "hello" {
 		return
 	}
