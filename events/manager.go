@@ -5,7 +5,7 @@ package events
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/eludris-community/eludris.go/interfaces"
@@ -106,7 +106,7 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 			event = &innerEvent
 		}
 	default:
-		fmt.Println("Unknown event type: ", op)
+		log.Println("Unknown event type: ", op)
 
 		return
 	}

@@ -3,7 +3,7 @@
 package client
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/eludris-community/eludris.go/events"
@@ -35,7 +35,7 @@ func (c clientImpl) Connect() error {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				log.Printf("error: %v\n", err)
 				err := c.Connect()
 				if err != nil {
 					panic(err)
@@ -43,7 +43,7 @@ func (c clientImpl) Connect() error {
 
 				return
 			}
-			fmt.Printf("recv: %s\n", message)
+			log.Printf("recv: %s\n", message)
 			c.eventManager.Dispatch(c, message)
 		}
 	}()
