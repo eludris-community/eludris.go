@@ -3,9 +3,9 @@
 package client
 
 import (
-	"log"
 	"time"
 
+	"github.com/apex/log"
 	"github.com/eludris-community/eludris.go/events"
 	"github.com/eludris-community/eludris.go/interfaces"
 	"github.com/gorilla/websocket"
@@ -35,7 +35,7 @@ func (c clientImpl) Connect() error {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Printf("error: %v\n", err)
+				log.WithError(err).Error("Error reading message")
 				err := c.Connect()
 				if err != nil {
 					panic(err)
@@ -43,7 +43,7 @@ func (c clientImpl) Connect() error {
 
 				return
 			}
-			log.Printf("recv: %s\n", message)
+			log.WithField("message", string(message)).Debug("Received message")
 			c.eventManager.Dispatch(c, message)
 		}
 	}()

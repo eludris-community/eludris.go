@@ -5,9 +5,9 @@ package events
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"reflect"
 
+	"github.com/apex/log"
 	"github.com/eludris-community/eludris.go/interfaces"
 	"github.com/mitchellh/mapstructure"
 )
@@ -79,6 +79,7 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 	// Treat it as a map at first.
 	var msg map[string]any
 	json.NewDecoder(bytes.NewBuffer(data)).Decode(&msg)
+	log.WithField("msg", msg).Debug("Dispatching event")
 
 	op := msg["op"].(string)
 	innerData := msg["d"]
@@ -106,7 +107,7 @@ func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 			event = &innerEvent
 		}
 	default:
-		log.Println("Unknown event type: ", op)
+		log.WithField("op", op).Warn("Unknown event type")
 
 		return
 	}

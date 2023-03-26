@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/apex/log"
 )
 
 type Data struct {
@@ -86,7 +87,7 @@ func (c clientImpl) retry(endpoint *CompiledEndpoint, data Data, tries int, obj 
 		return nil, fmt.Errorf("error waiting for bucket: %w", err)
 	}
 
-	log.Printf("Sending %s request to %s\n", method, uri.String())
+	log.WithField("method", method).WithField("url", uri.String()).Debug("Sending request")
 	res, err := c.httpClient.Do(req)
 
 	if err != nil {
@@ -105,7 +106,7 @@ func (c clientImpl) retry(endpoint *CompiledEndpoint, data Data, tries int, obj 
 		json.NewDecoder(res.Body).Decode(&obj)
 		return res, nil
 	case 429:
-		log.Printf("Rate limit exceeded on bucket %s", endpoint.Path)
+		log.WithField("path", endpoint.Path).Warn("Rate limit exceeded")
 		if tries >= c.rateLimiter.MaxRetries() {
 			return nil, fmt.Errorf("rate limit exceeded")
 		}
