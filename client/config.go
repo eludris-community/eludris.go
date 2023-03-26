@@ -11,4 +11,5 @@ type Config struct {
 	WSUrl        string
 	FileUrl      string
 	EventManager events.EventManager
+	RateLimiter  RateLimiter
 }

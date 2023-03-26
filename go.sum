@@ -1,5 +1,5 @@
-github.com/eludris-community/eludris-api-types.go v1.2.0 h1:cDyGO9u4+g+xQ8paN2ef3+Rji0BdN+Q2kksDN7G76kA=
-github.com/eludris-community/eludris-api-types.go v1.2.0/go.mod h1:YUpXUc6HGfrX8Em8oXjuT63kO+tAc9J3mTHNZ4ZqPRo=
+github.com/eludris-community/eludris-api-types.go v0.0.0-20230325172402-dd501e701d08 h1:CCSl6WX0uRJr3OURPHAijZlq3fHZtn/TicxzWNl5Rf4=
+github.com/eludris-community/eludris-api-types.go v0.0.0-20230325172402-dd501e701d08/go.mod h1:YUpXUc6HGfrX8Em8oXjuT63kO+tAc9J3mTHNZ4ZqPRo=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
