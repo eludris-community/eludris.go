@@ -16,6 +16,7 @@ type clientImpl struct {
 	fileUrl      string
 	httpClient   http.Client
 	eventManager events.EventManager
+	rateLimiter  RateLimiter
 }
 
 // New creates a new client.
@@ -32,6 +33,9 @@ func New(config Config) interfaces.Client {
 	if config.EventManager == nil {
 		config.EventManager = events.NewEventManager()
 	}
+	if config.RateLimiter == nil {
+		config.RateLimiter = NewRateLimiter()
+	}
 
 	return clientImpl{
 		httpUrl:      config.HTTPUrl,
@@ -39,5 +43,6 @@ func New(config Config) interfaces.Client {
 		fileUrl:      config.FileUrl,
 		httpClient:   http.Client{},
 		eventManager: config.EventManager,
+		rateLimiter:  config.RateLimiter,
 	}
 }

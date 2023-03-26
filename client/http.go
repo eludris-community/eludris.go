@@ -12,15 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
-	"time"
-)
-
-type RequestType int
-
-const (
-	Oprish RequestType = iota
-	Effis
 )
 
 type Data struct {
@@ -28,30 +19,24 @@ type Data struct {
 	FormData map[string]io.Reader
 }
 
-func (c clientImpl) request(reqType RequestType, method, path string, data Data, obj any) (*http.Response, error) {
-	// payload, err := json.Marshal(data)
-
-	// if err != nil {
-	// 	return err
-	// }
-
+func (c clientImpl) retry(endpoint *CompiledEndpoint, data Data, tries int, obj any) (*http.Response, error) {
 	var base string
-	switch reqType {
+	switch endpoint.Type {
 	case Oprish:
 		base = c.httpUrl
 	case Effis:
 		base = c.fileUrl
 	}
 
-	uri, err := url.Parse(base + path)
+	uri, err := url.Parse(base + endpoint.Path)
 
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Sending %s request to %s\n", method, uri.String())
+	method := endpoint.Endpoint.Method
 
-	req := http.Request{
+	req := &http.Request{
 		Method: method,
 		URL:    uri,
 		Header: make(map[string][]string),
@@ -96,24 +81,41 @@ func (c clientImpl) request(reqType RequestType, method, path string, data Data,
 		req.Body = io.NopCloser(&b)
 	}
 
-	for {
-		res, err := c.httpClient.Do(&req)
-
-		if err != nil {
-			return nil, err
-		}
-
-		defer res.Body.Close()
-		switch res.StatusCode {
-		case 200:
-			json.NewDecoder(res.Body).Decode(&obj)
-			return res, nil
-		case 429:
-			// TODO: Better ratelimiting using proper headers.
-			retry_after, _ := strconv.Atoi(res.Header.Get("X-RateLimit-Reset"))
-			time.Sleep(time.Duration(retry_after) * time.Millisecond)
-		default:
-			return nil, fmt.Errorf("error sending message: %s", res.Status)
-		}
+	first, err := c.rateLimiter.WaitBucket(endpoint, NewRateLimiter().MaxRetries())
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for bucket: %w", err)
 	}
+
+	log.Printf("Sending %s request to %s\n", method, uri.String())
+	res, err := c.httpClient.Do(req)
+
+	if err != nil {
+		_ = c.rateLimiter.UnlockBucket(endpoint, nil, first)
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	if err := c.rateLimiter.UnlockBucket(endpoint, res, first); err != nil {
+		return nil, fmt.Errorf("error unlocking bucket: %w", err)
+	}
+
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case 200:
+		json.NewDecoder(res.Body).Decode(&obj)
+		return res, nil
+	case 429:
+		log.Printf("Rate limit exceeded on bucket %s", endpoint.Path)
+		if tries >= c.rateLimiter.MaxRetries() {
+			return nil, fmt.Errorf("rate limit exceeded")
+		}
+
+		return c.retry(endpoint, data, tries+1, obj)
+	default:
+		return nil, fmt.Errorf("error sending message: %s", res.Status)
+	}
+}
+
+func (c clientImpl) request(endpoint *CompiledEndpoint, data Data, obj any) (*http.Response, error) {
+	return c.retry(endpoint, data, 1, obj)
 }

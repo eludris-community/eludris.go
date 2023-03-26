@@ -3,26 +3,23 @@
 package client
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
-	"github.com/eludris-community/eludris-api-types.go/effis"
+	"github.com/eludris-community/eludris-api-types.go/models"
 )
 
 // UploadAttachment uploads an attachment to the file server.
-func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (effis.FileData, error) {
+func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (models.FileData, error) {
 	return c.UploadFile("attachments", file, spoiler)
 }
 
 // UploadStaticFile uploads a file to the file server with the chosen "bucket".
-func (c clientImpl) UploadFile(bucket string, file io.Reader, spoiler bool) (effis.FileData, error) {
-	var res effis.FileData
+func (c clientImpl) UploadFile(bucket string, file io.Reader, spoiler bool) (models.FileData, error) {
+	var res models.FileData
 	_, err := c.request(
-		Effis,
-		"POST",
-		fmt.Sprintf("/%s/", bucket),
+		UploadFile.Compile(nil, bucket),
 		Data{FormData: map[string]io.Reader{
 			"file":    file,
 			"spoiler": strings.NewReader(strconv.FormatBool(spoiler)),
@@ -40,27 +37,27 @@ func (c clientImpl) FetchAttachment(id string) (io.ReadCloser, error) {
 
 // FetchFile fetches the raw data of a file.
 func (c clientImpl) FetchFile(bucket, id string) (io.ReadCloser, error) {
-	res, err := c.request(Effis, "GET", fmt.Sprintf("/%s/%s", bucket, id), Data{}, nil)
+	res, err := c.request(FetchFile.Compile(nil, bucket, id), Data{}, nil)
 
 	return res.Body, err
 }
 
 // FetchAttachmentData fetches the metadata of an attachment.
-func (c clientImpl) FetchAttachmentData(id string) (effis.FileData, error) {
+func (c clientImpl) FetchAttachmentData(id string) (models.FileData, error) {
 	return c.FetchFileData("attachments", id)
 }
 
 // FetchFileData fetches the metadata of a file.
-func (c clientImpl) FetchFileData(bucket, id string) (effis.FileData, error) {
-	var res effis.FileData
-	_, err := c.request(Effis, "GET", fmt.Sprintf("/%s/%s", bucket, id), Data{}, &res)
+func (c clientImpl) FetchFileData(bucket, id string) (models.FileData, error) {
+	var res models.FileData
+	_, err := c.request(FetchFileData.Compile(nil, bucket, id), Data{}, &res)
 
 	return res, err
 }
 
 // FetchStaticFile fetches the raw data of a static file.
 func (c clientImpl) FetchStaticFile(name string) (io.ReadCloser, error) {
-	res, err := c.request(Effis, "GET", fmt.Sprintf("/static/%s", name), Data{}, nil)
+	res, err := c.request(FetchStaticFile.Compile(nil, name), Data{}, nil)
 
 	return res.Body, err
 }

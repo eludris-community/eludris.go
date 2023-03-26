@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	// "time"
 	"os"
 	"os/signal" // whatsapp
 	"syscall"
@@ -58,13 +57,15 @@ func main() {
 		panic(err)
 	}
 
-	// for {
-	// 	msg, err := c.SendMessage("hewwo from gowang", "hello")
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	fmt.Println(msg)
-	// 	time.Sleep(1 * time.Second)
+	// // Ratelimit test
+	// for i := 0; i < 20; i++ {
+	// 	go func() {
+	// 		msg, err := c.SendMessage("hewwo from gowang", "hello")
+	// 		if err != nil {
+	// 			fmt.Printf("Error: %s", err.Error())
+	// 		}
+	// 		fmt.Println(msg)
+	// 	}()
 	// }
 
 	s := make(chan os.Signal, 1)
