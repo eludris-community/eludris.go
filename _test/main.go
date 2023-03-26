@@ -8,6 +8,8 @@ import (
 	"os/signal" // whatsapp
 	"syscall"
 
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/text"
 	"github.com/eludris-community/eludris.go/client"
 	"github.com/eludris-community/eludris.go/events"
 	"github.com/eludris-community/eludris.go/interfaces"
@@ -47,6 +49,9 @@ func onMessage(msg *events.MessageEvent, c interfaces.Client) {
 func main() {
 	HTTPUrl := os.Getenv("ELUDRIS_HTTP_URL")
 	WSUrl := os.Getenv("ELUDRIS_WS_URL")
+
+	log.SetLevel(log.DebugLevel)
+	log.SetHandler(text.Default)
 
 	manager := events.NewEventManager()
 	events.Subscribe(manager, onMessage)

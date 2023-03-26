@@ -2,11 +2,12 @@ package client
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/apex/log"
 )
 
 type bucket struct {
@@ -145,7 +146,7 @@ func (r *rateLimiterImpl) doWaitBucket(endpoint *CompiledEndpoint, retries int, 
 		first := bucket.Reserved == 0
 		bucket.Mutex.Unlock()
 
-		log.Printf("Ratelimited on bucket %s, waiting %.1fs", bucket.Endpoint.Path, until.Sub(now).Seconds())
+		log.WithField("bucket", bucket.Endpoint.Path).WithField("wait", until.Sub(now).Seconds()).Debug("Ratelimited")
 
 		<-time.After(until.Sub(now))
 		return r.doWaitBucket(endpoint, retries-1, first)
