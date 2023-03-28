@@ -38,9 +38,11 @@ func (l eventListener[E]) Handle(event Event, client interfaces.Client) {
 	}
 }
 
-// EventManager manages events, allowing you to subscribe to them.
+// EventManager manages events, dispatching and allowing subscriptions to events,
 type EventManager interface {
+	// Subscribe to an event with an event listener. The event is taken via reflection.
 	Subscribe(EventListener)
+	// Dispatch an event to all subscribers. Client is sent as the 2nd option to all subscribers.
 	Dispatch(interfaces.Client, []byte)
 }
 
@@ -66,6 +68,8 @@ func Subscribe[E Event](m EventManager, subscriber func(E, interfaces.Client)) {
 	}
 }
 
+// The manager implementation of subscribing to an event. Users should use
+// events.Subscribe() instead.
 func (m *managerImpl) Subscribe(listener EventListener) {
 	// Create the slice if it doesn't exist.
 	if _, ok := m.subscribers[listener.Op()]; !ok {
@@ -75,6 +79,7 @@ func (m *managerImpl) Subscribe(listener EventListener) {
 	m.subscribers[listener.Op()] = append(m.subscribers[listener.Op()], listener)
 }
 
+// Dispatch an event to all subscribers.
 func (m *managerImpl) Dispatch(client interfaces.Client, data []byte) {
 	// Treat it as a map at first.
 	var msg map[string]any

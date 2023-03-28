@@ -51,13 +51,14 @@ func (c clientImpl) Connect() error {
 	return nil
 }
 
+// The ping loop to ping every 44 seconds.
 func ping(conn *websocket.Conn, pongs chan struct{}) {
 	for {
 		time.Sleep(44 * time.Second)
 		conn.WriteMessage(websocket.TextMessage, []byte("{\"op\": \"PING\"}"))
 
 		select {
-
+		// Reconnect if we do not get a pong within 1 second.
 		case <-pongs:
 			continue
 		case <-time.After(1 * time.Second):

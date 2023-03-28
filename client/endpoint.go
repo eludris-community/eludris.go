@@ -8,6 +8,7 @@ import (
 
 type QueryValues map[string]any
 
+// RequestType represents the destination for the request - oprish or effis.
 type RequestType int
 
 const (
@@ -15,6 +16,7 @@ const (
 	Effis
 )
 
+// Encode the query values into a string via `url.Values`.
 func (q QueryValues) Encode() string {
 	values := url.Values{}
 	for k, v := range q {
@@ -23,12 +25,16 @@ func (q QueryValues) Encode() string {
 	return values.Encode()
 }
 
+// Endpoint represents a single endpoint.
+// It contains all the information needed to construct a request from input.
 type Endpoint struct {
 	Method string
 	Route  string
 	Type   RequestType
 }
 
+// CompiledEndpoint represents a compiled endpoint.
+// It contains the endpoint, the constructed URL, the path, and the type.
 type CompiledEndpoint struct {
 	Endpoint *Endpoint
 	Url      string
@@ -36,6 +42,7 @@ type CompiledEndpoint struct {
 	Type     RequestType
 }
 
+// Compile the endpoint with the given values and parameters.
 func (e *Endpoint) Compile(values QueryValues, params ...any) *CompiledEndpoint {
 	path := e.Route
 	for _, param := range params {
@@ -62,6 +69,7 @@ func (e *Endpoint) Compile(values QueryValues, params ...any) *CompiledEndpoint 
 	}
 }
 
+// NewEndpoint creates a new endpoint from the given values.
 func NewEndpoint(kind RequestType, method string, path string) *Endpoint {
 	return &Endpoint{
 		Method: method,

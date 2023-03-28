@@ -4,7 +4,6 @@ package client
 
 import "github.com/eludris-community/eludris-api-types.go/models"
 
-// SendMessage sends a message to Eludris.
 func (c clientImpl) SendMessage(author, content string) (models.Message, error) {
 	msg := models.Message{Author: author, Content: content}
 
