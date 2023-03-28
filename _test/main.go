@@ -62,16 +62,16 @@ func main() {
 		panic(err)
 	}
 
-	// // Ratelimit test
-	// for i := 0; i < 20; i++ {
-	// 	go func() {
-	// 		msg, err := c.SendMessage("hewwo from gowang", "hello")
-	// 		if err != nil {
-	// 			fmt.Printf("Error: %s", err.Error())
-	// 		}
-	// 		fmt.Println(msg)
-	// 	}()
-	// }
+	// Ratelimit test
+	for i := 0; i < 20; i++ {
+		go func(i int) {
+			msg, err := c.SendMessage("hewwo from gowang", fmt.Sprintf("hello %d", i))
+			if err != nil {
+				fmt.Printf("Error: %s", err.Error())
+			}
+			fmt.Println(msg)
+		}(i)
+	}
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
