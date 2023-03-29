@@ -51,7 +51,7 @@ func (c clientImpl) Connect() error {
 	return nil
 }
 
-// The ping loop to ping every 44 seconds.
+// ping is the ping loop to ping every 44 seconds.
 func ping(conn *websocket.Conn, pongs chan struct{}) {
 	for {
 		time.Sleep(44 * time.Second)

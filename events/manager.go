@@ -12,12 +12,17 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// EventListener represents a listener for an event.
 type EventListener interface {
+	// Handle handles an event.
 	Handle(Event, interfaces.Client)
+	// Op returns the opcode for this listener.
 	Op() string
+	// Func returns the inner function for this limiter.
 	Func() func(Event, interfaces.Client)
 }
 
+// eventListener is the internal implementation of EventListener
 type eventListener[E Event] struct {
 	op string
 	f  func(E, interfaces.Client)
@@ -68,8 +73,6 @@ func Subscribe[E Event](m EventManager, subscriber func(E, interfaces.Client)) {
 	}
 }
 
-// The manager implementation of subscribing to an event. Users should use
-// events.Subscribe() instead.
 func (m *managerImpl) Subscribe(listener EventListener) {
 	// Create the slice if it doesn't exist.
 	if _, ok := m.subscribers[listener.Op()]; !ok {

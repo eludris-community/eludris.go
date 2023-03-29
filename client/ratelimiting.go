@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package client
 
 import (
@@ -10,7 +12,7 @@ import (
 	"github.com/apex/log"
 )
 
-// A bucket is one scope of rate limiting.
+// bucket is one scope of rate limiting.
 // It is what is used to determine if a request should be sent or not, and what limit one falls under.
 type bucket struct {
 	Endpoint  *CompiledEndpoint
@@ -24,15 +26,16 @@ type bucket struct {
 
 // RateLimiter is an interface for handling rate limiting.
 type RateLimiter interface {
-	// How many times should a request be retried if it fails due to rate limiting?
+	// MaxRetries is how many times should a request be retried
+	// if it fails due to rate limiting?
 	MaxRetries() int
 	// Reset the rate limiter.
 	Reset()
-	// Wait for the bucket to be available.
+	// WaitBucket waits for the bucket to be available.
 	// Returns true if this is the first time the bucket is used,
 	// and so the lock must be held over the request.
 	WaitBucket(*CompiledEndpoint, int) (bool, error)
-	// Unlock the bucket after a request has been sent.
+	// UnlockBucket unlocks the bucket after a request has been sent.
 	// Takes in the boolean returned by WaitBucket.
 	UnlockBucket(*CompiledEndpoint, *http.Response, bool) error
 }
@@ -49,7 +52,7 @@ func NewRateLimiter() RateLimiter {
 	return rateLimiter
 }
 
-// Continuously clean up old buckets.
+// cleanup continuously clean up old buckets by calling doCleanup.
 func (l *rateLimiterImpl) cleanup() {
 	// TODO: Make interval configurable.
 	ticker := time.NewTicker(time.Second * 10)
@@ -58,7 +61,7 @@ func (l *rateLimiterImpl) cleanup() {
 	}
 }
 
-// Clean up old buckets.
+// doCleanup cleans up old buckets.
 func (r *rateLimiterImpl) doCleanup() {
 	r.bucketsMutex.Lock()
 	defer r.bucketsMutex.Unlock()
@@ -90,7 +93,7 @@ func (r *rateLimiterImpl) Reset() {
 	r.hashesMutex = sync.Mutex{}
 }
 
-// Get the hash for the current endpoint
+// getRouteHash gets the hash for the current endpoint
 func (r *rateLimiterImpl) getRouteHash(endpoint *CompiledEndpoint) string {
 	r.hashesMutex.Lock()
 	defer r.hashesMutex.Unlock()
@@ -104,7 +107,7 @@ func (r *rateLimiterImpl) getRouteHash(endpoint *CompiledEndpoint) string {
 	return hash
 }
 
-// Get the bucket for the current endpoint.
+// getBucket gets the bucket for the current endpoint.
 // If create is true, the bucket will be created if it does not exist.
 // Else, nil will be returned if the bucket could not be found.
 func (r *rateLimiterImpl) getBucket(endpoint *CompiledEndpoint, create bool) *bucket {
@@ -136,7 +139,8 @@ func (r *rateLimiterImpl) WaitBucket(endpoint *CompiledEndpoint, retries int) (b
 	return r.doWaitBucket(endpoint, retries, false)
 }
 
-// Actual handling for waiting for a bucket. This is recursive if the bucket is not ready.
+// doWaitBucket is the handling for waiting for a bucket.
+// This is recursive if the bucket is not ready.
 func (r *rateLimiterImpl) doWaitBucket(endpoint *CompiledEndpoint, retries int, first bool) (bool, error) {
 	if retries < 0 {
 		return false, fmt.Errorf("retries exhausted")
