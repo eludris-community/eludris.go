@@ -58,9 +58,14 @@ func (e *Endpoint) Compile(values QueryValues, params ...any) *CompiledEndpoint 
 		path = path[:start] + paramValue + path[end+1:]
 	}
 
-	query := values.Encode()
-	if query != "" {
-		query = "?" + query
+	var query string
+	if values == nil {
+		query = ""
+	} else {
+		query = values.Encode()
+		if query != "" {
+			query = "?" + query
+		}
 	}
 
 	return &CompiledEndpoint{

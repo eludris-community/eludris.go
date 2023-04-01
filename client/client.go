@@ -4,10 +4,16 @@
 package client
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/eludris-community/eludris-api-types.go/models"
 	"github.com/eludris-community/eludris.go/events"
 	"github.com/eludris-community/eludris.go/interfaces"
+)
+
+var (
+	ErrNoHttpUrl = errors.New("HttpUrl is required")
 )
 
 type clientImpl struct {
@@ -19,30 +25,57 @@ type clientImpl struct {
 	rateLimiter  RateLimiter
 }
 
-// New creates a new client.
-func New(config Config) interfaces.Client {
-	if config.HTTPUrl == "" {
-		config.HTTPUrl = "https://api.eludris.gay"
-	}
-	if config.WSUrl == "" {
-		config.WSUrl = "wss://ws.eludris.gay/"
-	}
-	if config.FileUrl == "" {
-		config.FileUrl = "https://cdn.eludris.gay"
-	}
-	if config.EventManager == nil {
-		config.EventManager = events.NewEventManager()
-	}
-	if config.RateLimiter == nil {
-		config.RateLimiter = NewRateLimiter()
+// BuildClient builds a client from a configuration.
+func BuildClient(config *Config) (interfaces.Client, error) {
+	if config.HttpUrl == "" {
+		return nil, ErrNoHttpUrl
 	}
 
-	return clientImpl{
-		httpUrl:      config.HTTPUrl,
-		wsUrl:        config.WSUrl,
+	if config.WsUrl == "" || config.FileUrl == "" {
+		tmp := clientImpl{httpUrl: config.HttpUrl, rateLimiter: NewRateLimiter()}
+		info, err := tmp.FetchInstanceInfo()
+		if err != nil {
+			return nil, err
+		}
+
+		if config.WsUrl == "" {
+			config.WsUrl = info.PandemoniumUrl
+		}
+		if config.FileUrl == "" {
+			config.FileUrl = info.EffisUrl
+		}
+	}
+
+	if config.EventManager == nil {
+		config.EventManager = events.NewEventManager(config.EventManagerOpts...)
+	}
+
+	if config.RateLimiter == nil {
+		config.RateLimiter = NewRateLimiter(config.RateLimiterOpts...)
+	}
+
+	return &clientImpl{
+		httpUrl:      config.HttpUrl,
+		wsUrl:        config.WsUrl,
 		fileUrl:      config.FileUrl,
 		httpClient:   http.Client{},
 		eventManager: config.EventManager,
 		rateLimiter:  config.RateLimiter,
-	}
+	}, nil
+}
+
+// New creates a new client.
+func New(opts ...ConfigOpt) (interfaces.Client, error) {
+	config := DefaultConfig()
+	config.Apply(opts)
+
+	return BuildClient(config)
+}
+
+// FetchInstanceInfo fetches information about the instance.
+func (c *clientImpl) FetchInstanceInfo() (models.InstanceInfo, error) {
+	var res models.InstanceInfo
+	_, err := c.request(InstanceInfo.Compile(nil), Data{}, &res)
+
+	return res, err
 }

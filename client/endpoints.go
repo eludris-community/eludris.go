@@ -3,6 +3,12 @@
 package client
 
 // Oprish
+
+// Instance Info
+var (
+	InstanceInfo = NewEndpoint(Oprish, "GET", "/")
+)
+
 // Create Message
 var (
 	SendMessage = NewEndpoint(Oprish, "POST", "/messages/")

@@ -48,30 +48,35 @@ func onMessage(msg *events.MessageEvent, c interfaces.Client) {
 
 func main() {
 	HTTPUrl := os.Getenv("ELUDRIS_HTTP_URL")
-	WSUrl := os.Getenv("ELUDRIS_WS_URL")
 
 	log.SetLevel(log.DebugLevel)
 	log.SetHandler(text.Default)
 
 	manager := events.NewEventManager()
 	events.Subscribe(manager, onMessage)
-	c := client.New(client.Config{HTTPUrl: HTTPUrl, WSUrl: WSUrl, EventManager: manager})
-	err := c.Connect()
+	c, err := client.New(
+		client.WithEventManagerOpts(events.WithListenerFunc(onMessage)),
+		client.WithHttpUrl(HTTPUrl),
+	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	// Ratelimit test
-	for i := 0; i < 20; i++ {
-		go func(i int) {
-			msg, err := c.SendMessage("hewwo from gowang", fmt.Sprintf("hello %d", i))
-			if err != nil {
-				fmt.Printf("Error: %s", err.Error())
-			}
-			fmt.Println(msg)
-		}(i)
+	if err := c.Connect(); err != nil {
+		panic(err)
 	}
+
+	// // Ratelimit test
+	// for i := 0; i < 20; i++ {
+	// 	go func(i int) {
+	// 		msg, err := c.SendMessage("hewwo from gowang", fmt.Sprintf("hello %d", i))
+	// 		if err != nil {
+	// 			fmt.Printf("Error: %s", err.Error())
+	// 		}
+	// 		fmt.Println(msg)
+	// 	}(i)
+	// }
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
