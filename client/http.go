@@ -82,7 +82,7 @@ func (c clientImpl) retry(endpoint *CompiledEndpoint, data Data, tries int, obj 
 		req.Body = io.NopCloser(&b)
 	}
 
-	first, err := c.rateLimiter.WaitBucket(endpoint, NewRateLimiter().MaxRetries())
+	first, err := c.rateLimiter.WaitBucket(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for bucket: %w", err)
 	}

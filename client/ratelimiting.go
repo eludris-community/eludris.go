@@ -34,15 +34,19 @@ type RateLimiter interface {
 	// WaitBucket waits for the bucket to be available.
 	// Returns true if this is the first time the bucket is used,
 	// and so the lock must be held over the request.
-	WaitBucket(*CompiledEndpoint, int) (bool, error)
+	WaitBucket(*CompiledEndpoint) (bool, error)
 	// UnlockBucket unlocks the bucket after a request has been sent.
 	// Takes in the boolean returned by WaitBucket.
 	UnlockBucket(*CompiledEndpoint, *http.Response, bool) error
 }
 
 // NewRateLimiter creates a new default rate limiter.
-func NewRateLimiter() RateLimiter {
+func NewRateLimiter(opts ...RateLimiterOpt) RateLimiter {
+	config := DefaultRateLimiterConfig()
+	config.Apply(opts)
+
 	rateLimiter := &rateLimiterImpl{
+		config:  *config,
 		hashes:  map[*Endpoint]string{},
 		buckets: map[string]*bucket{},
 	}
@@ -54,8 +58,7 @@ func NewRateLimiter() RateLimiter {
 
 // cleanup continuously clean up old buckets by calling doCleanup.
 func (l *rateLimiterImpl) cleanup() {
-	// TODO: Make interval configurable.
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(l.config.CleanupInterval)
 	for range ticker.C {
 		l.doCleanup()
 	}
@@ -80,10 +83,11 @@ type rateLimiterImpl struct {
 	hashesMutex  sync.Mutex
 	buckets      map[string]*bucket
 	bucketsMutex sync.Mutex
+	config       RateLimiterConfig
 }
 
 func (r *rateLimiterImpl) MaxRetries() int {
-	return 10 // TODO: Make this configurable.
+	return r.config.MaxRetries
 }
 
 func (r *rateLimiterImpl) Reset() {
@@ -135,8 +139,8 @@ func (r *rateLimiterImpl) getBucket(endpoint *CompiledEndpoint, create bool) *bu
 	return b
 }
 
-func (r *rateLimiterImpl) WaitBucket(endpoint *CompiledEndpoint, retries int) (bool, error) {
-	return r.doWaitBucket(endpoint, retries, false)
+func (r *rateLimiterImpl) WaitBucket(endpoint *CompiledEndpoint) (bool, error) {
+	return r.doWaitBucket(endpoint, r.config.MaxRetries, false)
 }
 
 // doWaitBucket is the handling for waiting for a bucket.
