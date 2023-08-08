@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/eludris-community/eludris.go/compare/v1.0.0...v2.0.0) (2023-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* add nice configuration ([#9](https://github.com/eludris-community/eludris.go/issues/9))
+
+### Features
+
+* add nice configuration ([#9](https://github.com/eludris-community/eludris.go/issues/9)) ([0235548](https://github.com/eludris-community/eludris.go/commit/0235548213d0af592a8dccc39ab94d9794331c9c))
+
 ## [1.0.0](https://github.com/eludris-community/eludris.go/compare/v0.1.0...v1.0.0) (2023-03-21)
 
 
