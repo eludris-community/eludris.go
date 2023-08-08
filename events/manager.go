@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/apex/log"
-	"github.com/eludris-community/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/v2/interfaces"
 	"github.com/mitchellh/mapstructure"
 )
 

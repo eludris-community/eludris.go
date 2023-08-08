@@ -2,7 +2,7 @@
 
 package client
 
-import "github.com/eludris-community/eludris.go/events"
+import "github.com/eludris-community/eludris.go/v2/events"
 
 type ConfigOpt func(config *Config)
 

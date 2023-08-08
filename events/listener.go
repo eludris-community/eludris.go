@@ -3,7 +3,7 @@
 package events
 
 import (
-	"github.com/eludris-community/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/v2/interfaces"
 )
 
 // EventListener represents a listener for an event.

@@ -10,9 +10,9 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-	"github.com/eludris-community/eludris.go/client"
-	"github.com/eludris-community/eludris.go/events"
-	"github.com/eludris-community/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/v2/client"
+	"github.com/eludris-community/eludris.go/v2/events"
+	"github.com/eludris-community/eludris.go/v2/interfaces"
 )
 
 func onMessage(msg *events.MessageEvent, c interfaces.Client) {

@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/eludris-community/eludris-api-types.go/models"
-	"github.com/eludris-community/eludris.go/events"
-	"github.com/eludris-community/eludris.go/interfaces"
+	"github.com/eludris-community/eludris.go/v2/events"
+	"github.com/eludris-community/eludris.go/v2/interfaces"
 )
 
 var (

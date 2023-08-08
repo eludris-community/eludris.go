@@ -1,8 +1,8 @@
-module github.com/eludris-community/eludris.go
+module github.com/eludris-community/eludris.go/v2
 
 go 1.19
 
-replace github.com/eludris-community/eludris.go => ./
+replace github.com/eludris-community/eludris.go/v2 => ./
 
 require (
 	github.com/apex/log v1.9.0
