@@ -2,7 +2,10 @@
 
 package client
 
-import "github.com/eludris-community/eludris.go/v2/events"
+import (
+	"github.com/eludris-community/eludris-api-types.go/v2/pandemonium"
+	"github.com/eludris-community/eludris.go/v2/gateway"
+)
 
 type ConfigOpt func(config *Config)
 
@@ -19,18 +22,22 @@ type Config struct {
 	// This is obtainable from HTTPUrl if not set.
 	FileUrl string
 	// An event manager to use for the client.
-	EventManager events.EventManager
+	EventManager EventManager
 	// Options to apply to EventManager
-	EventManagerOpts []events.EventManagerOpt
+	EventManagerOpts []EventManagerOpt
 	// A rate limiter to use for the client.
 	RateLimiter RateLimiter
 	// Options to apply to RateLimiter
 	RateLimiterOpts []RateLimiterOpt
+	Gateway         gateway.Gateway
+	GatewayOpts     []gateway.ConfigOpt
 }
 
 // DefaultConfig returns a new Config with default values.
-func DefaultConfig() *Config {
-	return &Config{}
+func DefaultConfig(gatewayHandlers map[pandemonium.OpcodeType]GatewayEventHandler) *Config {
+	return &Config{
+		EventManagerOpts: []EventManagerOpt{WithGatewayHandlers(gatewayHandlers)},
+	}
 }
 
 // Apply applies the given ConfigOpts to the Config.
@@ -62,16 +69,16 @@ func WithFileUrl(url string) ConfigOpt {
 }
 
 // WithEventManager returns a ConfigOpt that sets the event manager.
-func WithEventManager(manager events.EventManager) ConfigOpt {
+func WithEventManager(manager EventManager) ConfigOpt {
 	return func(config *Config) {
 		config.EventManager = manager
 	}
 }
 
 // WithEventManagerOpts returns a ConfigOpt that sets the event manager options.
-func WithEventManagerOpts(opts ...events.EventManagerOpt) ConfigOpt {
+func WithEventManagerOpts(opts ...EventManagerOpt) ConfigOpt {
 	return func(config *Config) {
-		config.EventManagerOpts = opts
+		config.EventManagerOpts = append(config.EventManagerOpts, opts...)
 	}
 }
 
@@ -85,6 +92,25 @@ func WithRateLimiter(limiter RateLimiter) ConfigOpt {
 // WithRateLimiterOpts returns a ConfigOpt that sets the rate limiter options.
 func WithRateLimiterOpts(opts ...RateLimiterOpt) ConfigOpt {
 	return func(config *Config) {
-		config.RateLimiterOpts = opts
+		config.RateLimiterOpts = append(config.RateLimiterOpts, opts...)
+	}
+}
+
+// WithGateway lets you inject your own gateway.Gateway.
+func WithGateway(gateway gateway.Gateway) ConfigOpt {
+	return func(config *Config) {
+		config.Gateway = gateway
+	}
+}
+
+func WithDefaultGateway() ConfigOpt {
+	return func(config *Config) {
+		config.GatewayOpts = append(config.GatewayOpts, func(_ *gateway.Config) {})
+	}
+}
+
+func WithGatewayConfigOpts(opts ...gateway.ConfigOpt) ConfigOpt {
+	return func(config *Config) {
+		config.GatewayOpts = append(config.GatewayOpts, opts...)
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eludris-community/eludris-api-types.go/models"
+	"github.com/eludris-community/eludris-api-types.go/v2/models"
 )
 
 func (c clientImpl) UploadAttachment(file io.Reader, spoiler bool) (models.FileData, error) {

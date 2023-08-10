@@ -2,6 +2,8 @@
 
 An Eludris API wrapper written in go.
 
+This takes heavy inspiration from [Disgo](https://github.com/disgoorg/disgo).
+
 ## Installation
 
 ```bash

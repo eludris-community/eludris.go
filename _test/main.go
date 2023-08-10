@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal" // whatsapp
@@ -10,12 +11,13 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
+	"github.com/eludris-community/eludris.go/v2"
 	"github.com/eludris-community/eludris.go/v2/client"
 	"github.com/eludris-community/eludris.go/v2/events"
-	"github.com/eludris-community/eludris.go/v2/interfaces"
 )
 
-func onMessage(msg *events.MessageEvent, c interfaces.Client) {
+func onMessage(msg *events.MessageCreate) {
+	c := msg.Client()
 	if msg.Author == "hello" {
 		return
 	}
@@ -52,18 +54,17 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 	log.SetHandler(text.Default)
 
-	manager := events.NewEventManager()
-	events.Subscribe(manager, onMessage)
-	c, err := client.New(
-		client.WithEventManagerOpts(events.WithListenerFunc(onMessage)),
+	c, err := eludris.New(
+		client.WithEventManagerOpts(client.WithListenerFunc(onMessage)),
 		client.WithHttpUrl(HTTPUrl),
+		client.WithDefaultGateway(),
 	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	if err := c.Connect(); err != nil {
+	if err := c.ConnectGateway(context.TODO()); err != nil {
 		panic(err)
 	}
 

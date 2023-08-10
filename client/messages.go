@@ -2,7 +2,7 @@
 
 package client
 
-import "github.com/eludris-community/eludris-api-types.go/models"
+import "github.com/eludris-community/eludris-api-types.go/v2/models"
 
 func (c clientImpl) SendMessage(author, content string) (models.Message, error) {
 	msg := models.Message{Author: author, Content: content}
