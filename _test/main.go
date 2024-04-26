@@ -14,6 +14,7 @@ import (
 	"github.com/eludris-community/eludris.go/v2"
 	"github.com/eludris-community/eludris.go/v2/client"
 	"github.com/eludris-community/eludris.go/v2/events"
+	"github.com/eludris-community/eludris.go/v2/types"
 )
 
 func onMessage(msg *events.MessageCreate) {
@@ -24,7 +25,7 @@ func onMessage(msg *events.MessageCreate) {
 
 	switch msg.Content {
 	case "!speed":
-		_, err := c.SendMessage("googwuki", "I am the fastest ever.")
+		_, err := c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: "I am the fastest ever."})
 
 		if err != nil {
 			panic(err)
@@ -36,12 +37,12 @@ func onMessage(msg *events.MessageCreate) {
 		}
 		defer file.Close()
 
-		data, err := c.UploadAttachment(file, false)
+		data, err := c.Rest().UploadAttachment(file, false)
 		if err != nil {
 			panic(err)
 		}
-
-		_, err = c.SendMessage("googwuki", fmt.Sprintf("https://cdn.eludris.gay/%s", data.Id))
+		log.Infof("%v", data)
+		_, err = c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: fmt.Sprintf("https://cdn.eludris.gay/%s", data.Id)})
 		if err != nil {
 			panic(err)
 		}
@@ -56,7 +57,7 @@ func main() {
 
 	c, err := eludris.New(
 		client.WithEventManagerOpts(client.WithListenerFunc(onMessage)),
-		client.WithHttpUrl(HTTPUrl),
+		client.WithApiUrl(HTTPUrl),
 		client.WithDefaultGateway(),
 	)
 

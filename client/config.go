@@ -5,6 +5,7 @@ package client
 import (
 	"github.com/eludris-community/eludris-api-types.go/v2/pandemonium"
 	"github.com/eludris-community/eludris.go/v2/gateway"
+	"github.com/eludris-community/eludris.go/v2/rest"
 )
 
 type ConfigOpt func(config *Config)
@@ -13,8 +14,8 @@ type ConfigOpt func(config *Config)
 // This allows you to set the URLs for your chosen Eludris instance.
 // These contain defaults, notably to the "official" Eludris instance https://eludris.gay.
 type Config struct {
-	// HttpUrl is the URL for the HTTP API, A.K.A "oprish".
-	HttpUrl string
+	// ApiUrl is the URL for the HTTP API, A.K.A "oprish".
+	ApiUrl string
 	// WSUrl is the URL for the WebSocket gateway, A.K.A "pandemonium".
 	// This is obtainable from HTTPUrl if not set.
 	WsUrl string
@@ -25,12 +26,10 @@ type Config struct {
 	EventManager EventManager
 	// Options to apply to EventManager
 	EventManagerOpts []EventManagerOpt
-	// A rate limiter to use for the client.
-	RateLimiter RateLimiter
-	// Options to apply to RateLimiter
-	RateLimiterOpts []RateLimiterOpt
-	Gateway         gateway.Gateway
-	GatewayOpts     []gateway.ConfigOpt
+	Gateway          gateway.Gateway
+	GatewayOpts      []gateway.ConfigOpt
+	Rest             rest.Rest
+	RestOpts         []rest.ConfigOpt
 }
 
 // DefaultConfig returns a new Config with default values.
@@ -48,9 +47,9 @@ func (c *Config) Apply(opts []ConfigOpt) {
 }
 
 // WithHttpUrl returns a ConfigOpt that sets the HTTP URL.
-func WithHttpUrl(url string) ConfigOpt {
+func WithApiUrl(url string) ConfigOpt {
 	return func(config *Config) {
-		config.HttpUrl = url
+		config.ApiUrl = url
 	}
 }
 
@@ -79,20 +78,6 @@ func WithEventManager(manager EventManager) ConfigOpt {
 func WithEventManagerOpts(opts ...EventManagerOpt) ConfigOpt {
 	return func(config *Config) {
 		config.EventManagerOpts = append(config.EventManagerOpts, opts...)
-	}
-}
-
-// WithRateLimiter returns a ConfigOpt that sets the rate limiter.
-func WithRateLimiter(limiter RateLimiter) ConfigOpt {
-	return func(config *Config) {
-		config.RateLimiter = limiter
-	}
-}
-
-// WithRateLimiterOpts returns a ConfigOpt that sets the rate limiter options.
-func WithRateLimiterOpts(opts ...RateLimiterOpt) ConfigOpt {
-	return func(config *Config) {
-		config.RateLimiterOpts = append(config.RateLimiterOpts, opts...)
 	}
 }
 

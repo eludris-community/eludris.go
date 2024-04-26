@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-package client
+package rest
 
 import (
 	"fmt"

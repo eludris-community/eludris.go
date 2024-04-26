@@ -5,11 +5,9 @@ package client
 
 import (
 	"context"
-	"io"
-	"net/http"
 
-	"github.com/eludris-community/eludris-api-types.go/v2/models"
 	"github.com/eludris-community/eludris.go/v2/gateway"
+	"github.com/eludris-community/eludris.go/v2/rest"
 	"github.com/eludris-community/eludris.go/v2/types"
 )
 
@@ -17,43 +15,20 @@ import (
 type Client interface {
 	ConnectGateway(ctx context.Context) error
 	EventManager() EventManager
-
-	// SendMessage sends a message to the chat.
-	// Returns the message that was sent.
-	// Author must be between 1 and 32 characters long.
-	// Content must be between 1 and the instance's configured max message length.
-	SendMessage(author, content string) (models.Message, error)
-
-	// UploadAttachment uploads a file to the instance's attachments bucket.
-	UploadAttachment(file io.Reader, spoiler bool) (models.FileData, error)
-	// UploadFile uploads a file to a specific bucket.
-	// Currently only "attachments" exists.
-	UploadFile(bucket string, file io.Reader, spoiler bool) (models.FileData, error)
-	// FetchAttachment fetches a file from the instance's attachments bucket.
-	FetchAttachment(id string) (io.ReadCloser, error)
-	// FetchFile fetches a file from a specific bucket.
-	// Currently only "attachments" exists.
-	FetchFile(bucket, id string) (io.ReadCloser, error)
-	// FetchAttachmentData fetches a file from the instance's attachments bucket.
-	FetchAttachmentData(id string) (models.FileData, error)
-	// FetchFileData fetches a file from a specific bucket.
-	// Currently only "attachments" exists.
-	FetchFileData(bucket, id string) (models.FileData, error)
+	Rest() rest.Rest
 }
 
 type clientImpl struct {
 	httpUrl      string
-	fileUrl      string
-	httpClient   http.Client
 	gateway      gateway.Gateway
+	rest         rest.Rest
 	eventManager EventManager
-	rateLimiter  RateLimiter
 }
 
 // BuildClient builds a client from a configuration.
 func BuildClient(config *Config) (Client, error) {
-	if config.HttpUrl == "" {
-		return nil, types.ErrNoHttpUrl
+	if config.ApiUrl == "" {
+		return nil, types.ErrNoApiUrl
 	}
 
 	client := &clientImpl{}
@@ -63,14 +38,10 @@ func BuildClient(config *Config) (Client, error) {
 	}
 	client.eventManager = config.EventManager
 
-	if config.RateLimiter == nil {
-		config.RateLimiter = NewRateLimiter(config.RateLimiterOpts...)
-	}
-	client.rateLimiter = config.RateLimiter
-
-	client.httpUrl = config.HttpUrl
+	client.httpUrl = config.ApiUrl
 	if config.WsUrl == "" || config.FileUrl == "" {
-		info, err := client.FetchInstanceInfo()
+		tmp := rest.New(config.ApiUrl, "")
+		info, err := tmp.GetInstanceInfo()
 		if err != nil {
 			return nil, err
 		}
@@ -82,6 +53,10 @@ func BuildClient(config *Config) (Client, error) {
 			config.FileUrl = info.EffisUrl
 		}
 	}
+	if config.Rest == nil {
+		config.Rest = rest.New(config.ApiUrl, config.FileUrl, config.RestOpts...)
+	}
+	client.rest = config.Rest
 
 	if config.Gateway == nil && len(config.GatewayOpts) > 0 {
 		config.GatewayOpts = append([]gateway.ConfigOpt{
@@ -95,12 +70,8 @@ func BuildClient(config *Config) (Client, error) {
 	return client, nil
 }
 
-// FetchInstanceInfo fetches information about the instance.
-func (c *clientImpl) FetchInstanceInfo() (models.InstanceInfo, error) {
-	var res models.InstanceInfo
-	_, err := c.request(InstanceInfo.Compile(nil), Data{}, &res)
-
-	return res, err
+func (c *clientImpl) Rest() rest.Rest {
+	return c.rest
 }
 
 func (c *clientImpl) EventManager() EventManager {

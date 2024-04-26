@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-package client
+package rest
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/sasha-s/go-csync"
 )
 
 // bucket is one scope of rate limiting.
@@ -17,7 +19,7 @@ import (
 type bucket struct {
 	Endpoint  *CompiledEndpoint
 	Reset     time.Time
-	Mutex     sync.Mutex
+	Mutex     csync.Mutex
 	Remaining int
 	Limit     int
 	Reserved  int
@@ -34,10 +36,10 @@ type RateLimiter interface {
 	// WaitBucket waits for the bucket to be available.
 	// Returns true if this is the first time the bucket is used,
 	// and so the lock must be held over the request.
-	WaitBucket(*CompiledEndpoint) (bool, error)
+	WaitBucket(context.Context, *CompiledEndpoint) (bool, error)
 	// UnlockBucket unlocks the bucket after a request has been sent.
 	// Takes in the boolean returned by WaitBucket.
-	UnlockBucket(*CompiledEndpoint, *http.Response, bool) error
+	UnlockBucket(context.Context, *CompiledEndpoint, *http.Response, bool) error
 }
 
 // NewRateLimiter creates a new default rate limiter.
@@ -139,20 +141,20 @@ func (r *rateLimiterImpl) getBucket(endpoint *CompiledEndpoint, create bool) *bu
 	return b
 }
 
-func (r *rateLimiterImpl) WaitBucket(endpoint *CompiledEndpoint) (bool, error) {
-	return r.doWaitBucket(endpoint, r.config.MaxRetries, false)
+func (r *rateLimiterImpl) WaitBucket(ctx context.Context, endpoint *CompiledEndpoint) (bool, error) {
+	return r.doWaitBucket(ctx, endpoint, r.config.MaxRetries, false)
 }
 
 // doWaitBucket is the handling for waiting for a bucket.
 // This is recursive if the bucket is not ready.
-func (r *rateLimiterImpl) doWaitBucket(endpoint *CompiledEndpoint, retries int, first bool) (bool, error) {
+func (r *rateLimiterImpl) doWaitBucket(ctx context.Context, endpoint *CompiledEndpoint, retries int, first bool) (bool, error) {
 	if retries < 0 {
 		return false, fmt.Errorf("retries exhausted")
 	}
 
 	bucket := r.getBucket(endpoint, true)
 
-	bucket.Mutex.Lock()
+	bucket.Mutex.CLock(ctx)
 	first = bucket.First || first
 	bucket.First = false
 
@@ -171,11 +173,15 @@ func (r *rateLimiterImpl) doWaitBucket(endpoint *CompiledEndpoint, retries int, 
 		// and update the rate limit information.
 		first := bucket.Reserved == 0
 		bucket.Mutex.Unlock()
-
 		log.WithField("bucket", bucket.Endpoint.Path).WithField("wait", until.Sub(now).Seconds()).Debug("Ratelimited")
 
-		<-time.After(until.Sub(now))
-		return r.doWaitBucket(endpoint, retries-1, first)
+		select {
+		case <-time.After(until.Sub(now)):
+		case <-ctx.Done():
+			bucket.Mutex.Unlock()
+			return false, ctx.Err()
+		}
+		return r.doWaitBucket(ctx, endpoint, retries-1, first)
 	}
 
 	bucket.Reserved++
@@ -186,7 +192,7 @@ func (r *rateLimiterImpl) doWaitBucket(endpoint *CompiledEndpoint, retries int, 
 	return first, nil
 }
 
-func (l *rateLimiterImpl) UnlockBucket(endpoint *CompiledEndpoint, rs *http.Response, locked bool) error {
+func (l *rateLimiterImpl) UnlockBucket(ctx context.Context, endpoint *CompiledEndpoint, rs *http.Response, locked bool) error {
 	b := l.getBucket(endpoint, false)
 	if b == nil {
 		return nil
@@ -198,7 +204,7 @@ func (l *rateLimiterImpl) UnlockBucket(endpoint *CompiledEndpoint, rs *http.Resp
 	}
 
 	if !locked {
-		b.Mutex.Lock()
+		b.Mutex.CLock(ctx)
 	}
 
 	defer b.Mutex.Unlock()
