@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/apex/log"
@@ -82,9 +81,9 @@ func (r *rateLimiterImpl) doCleanup() {
 // rateLimiterImpl is the default implementation of RateLimiter.
 type rateLimiterImpl struct {
 	hashes       map[*Endpoint]string
-	hashesMutex  sync.Mutex
+	hashesMutex  csync.Mutex
 	buckets      map[string]*bucket
-	bucketsMutex sync.Mutex
+	bucketsMutex csync.Mutex
 	config       RateLimiterConfig
 }
 
@@ -94,14 +93,14 @@ func (r *rateLimiterImpl) MaxRetries() int {
 
 func (r *rateLimiterImpl) Reset() {
 	r.buckets = map[string]*bucket{}
-	r.bucketsMutex = sync.Mutex{}
+	r.bucketsMutex = csync.Mutex{}
 	r.hashes = map[*Endpoint]string{}
-	r.hashesMutex = sync.Mutex{}
+	r.hashesMutex = csync.Mutex{}
 }
 
 // getRouteHash gets the hash for the current endpoint
-func (r *rateLimiterImpl) getRouteHash(endpoint *CompiledEndpoint) string {
-	r.hashesMutex.Lock()
+func (r *rateLimiterImpl) getRouteHash(ctx context.Context, endpoint *CompiledEndpoint) string {
+	r.hashesMutex.CLock(ctx)
 	defer r.hashesMutex.Unlock()
 
 	hash, ok := r.hashes[endpoint.Endpoint]
@@ -116,10 +115,10 @@ func (r *rateLimiterImpl) getRouteHash(endpoint *CompiledEndpoint) string {
 // getBucket gets the bucket for the current endpoint.
 // If create is true, the bucket will be created if it does not exist.
 // Else, nil will be returned if the bucket could not be found.
-func (r *rateLimiterImpl) getBucket(endpoint *CompiledEndpoint, create bool) *bucket {
-	hash := r.getRouteHash(endpoint)
+func (r *rateLimiterImpl) getBucket(ctx context.Context, endpoint *CompiledEndpoint, create bool) *bucket {
+	hash := r.getRouteHash(ctx, endpoint)
 
-	r.bucketsMutex.Lock()
+	r.bucketsMutex.CLock(ctx)
 	defer r.bucketsMutex.Unlock()
 
 	b, ok := r.buckets[hash]
@@ -152,7 +151,7 @@ func (r *rateLimiterImpl) doWaitBucket(ctx context.Context, endpoint *CompiledEn
 		return false, fmt.Errorf("retries exhausted")
 	}
 
-	bucket := r.getBucket(endpoint, true)
+	bucket := r.getBucket(ctx, endpoint, true)
 
 	bucket.Mutex.CLock(ctx)
 	first = bucket.First || first
@@ -193,7 +192,7 @@ func (r *rateLimiterImpl) doWaitBucket(ctx context.Context, endpoint *CompiledEn
 }
 
 func (l *rateLimiterImpl) UnlockBucket(ctx context.Context, endpoint *CompiledEndpoint, rs *http.Response, locked bool) error {
-	b := l.getBucket(endpoint, false)
+	b := l.getBucket(ctx, endpoint, false)
 	if b == nil {
 		return nil
 	}

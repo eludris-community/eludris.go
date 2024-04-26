@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"sync"
 	"syscall"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/eludris-community/eludris-api-types.go/v2/pandemonium"
 	"github.com/eludris-community/eludris.go/v2/types"
 	"github.com/gorilla/websocket"
+	"github.com/sasha-s/go-csync"
 )
 
 func New(eventHandlerFunc EventHandlerFunc, opts ...ConfigOpt) Gateway {
@@ -31,7 +31,7 @@ type gatewayImpl struct {
 	eventHandlerFunc EventHandlerFunc
 
 	conn      *websocket.Conn
-	connMutex sync.Mutex
+	connMutex csync.Mutex
 
 	lastPingSent     time.Time
 	lastPongReceived time.Time
@@ -69,7 +69,7 @@ func (g *gatewayImpl) connectTries(ctx context.Context, try int) error {
 
 func (g *gatewayImpl) connect(ctx context.Context) error {
 	log.WithField("url", g.config.URL).Info("Connecting to gateway")
-	g.connMutex.Lock()
+	g.connMutex.CLock(ctx)
 	defer g.connMutex.Unlock()
 
 	if g.conn != nil {
@@ -119,7 +119,7 @@ func (g *gatewayImpl) reconnect() {
 func (g *gatewayImpl) listen(conn *websocket.Conn) {
 loop:
 	for {
-		mt, data, err := conn.ReadMessage()
+		_, data, err := conn.ReadMessage()
 		if err != nil {
 			g.connMutex.Lock()
 			sameConnection := g.conn == conn
@@ -147,7 +147,7 @@ loop:
 			break loop
 		}
 
-		message, err := g.parseMessage(mt, data)
+		message, err := g.parseMessage(data)
 		if err != nil {
 			log.WithError(err).Error("error while parsing gateway message")
 			continue
@@ -210,7 +210,7 @@ func (g *gatewayImpl) Send(ctx context.Context, op pandemonium.OpcodeType, d any
 }
 
 func (g *gatewayImpl) send(ctx context.Context, messageType int, data []byte) error {
-	g.connMutex.Lock()
+	g.connMutex.CLock(ctx)
 	defer g.connMutex.Unlock()
 	if g.conn == nil {
 		return types.ErrGatewayNotConnected
@@ -224,7 +224,7 @@ func (g *gatewayImpl) Latency() time.Duration {
 	return g.lastPongReceived.Sub(g.lastPingSent)
 }
 
-func (g *gatewayImpl) parseMessage(mt int, data []byte) (Payload, error) {
+func (g *gatewayImpl) parseMessage(data []byte) (Payload, error) {
 	log.WithField("message", string(data)).Debug("received gateway message")
 
 	var payload Payload
@@ -232,7 +232,7 @@ func (g *gatewayImpl) parseMessage(mt int, data []byte) (Payload, error) {
 }
 
 func (g *gatewayImpl) CloseWithCode(ctx context.Context, code int, message string) {
-	g.connMutex.Lock()
+	g.connMutex.CLock(ctx)
 	defer g.connMutex.Unlock()
 	if g.conn != nil {
 		log.WithFields(log.Fields{
