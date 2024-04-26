@@ -16,17 +16,19 @@ import (
 	"github.com/sasha-s/go-csync"
 )
 
-func New(eventHandlerFunc EventHandlerFunc, opts ...ConfigOpt) Gateway {
+func New(token string, eventHandlerFunc EventHandlerFunc, opts ...ConfigOpt) Gateway {
 	config := DefaultConfig()
 	config.Apply(opts)
 
 	return &gatewayImpl{
+		token:            token,
 		config:           *config,
 		eventHandlerFunc: eventHandlerFunc,
 	}
 }
 
 type gatewayImpl struct {
+	token            string
 	config           Config
 	eventHandlerFunc EventHandlerFunc
 
