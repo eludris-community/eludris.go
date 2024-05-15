@@ -38,6 +38,23 @@ func (p *Payload) UnmarshalJSON(data []byte) error {
 		var d pandemonium.MessageCreate
 		err = json.Unmarshal(raw.D, &d)
 		payloadData = d
+	case pandemonium.AuthenticatedOp:
+		var d pandemonium.Authenticated
+		err = json.Unmarshal(raw.D, &d)
+		payloadData = d
+	case pandemonium.UserCreateOP:
+		var d pandemonium.UserCreate
+		err = json.Unmarshal(raw.D, &d)
+		payloadData = d
+	case pandemonium.UserUpdateOP:
+		var d pandemonium.UserUpdate
+		err = json.Unmarshal(raw.D, &d)
+		payloadData = d
+	case pandemonium.PresenceUpdateOP:
+		var d pandemonium.PresenceUpdate
+		err = json.Unmarshal(raw.D, &d)
+		payloadData = d
+
 	default:
 		var d PayloadDataUnknown
 		err = json.Unmarshal(raw.D, &d)

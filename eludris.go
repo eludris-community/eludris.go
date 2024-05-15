@@ -6,9 +6,9 @@ import (
 )
 
 // New creates a new client.
-func New(opts ...client.ConfigOpt) (client.Client, error) {
+func New(token string, opts ...client.ConfigOpt) (client.Client, error) {
 	config := client.DefaultConfig(handlers.AllHandlers())
 	config.Apply(opts)
 
-	return client.BuildClient(config)
+	return client.BuildClient(token, config)
 }

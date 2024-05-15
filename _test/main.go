@@ -4,7 +4,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"os"
 	"os/signal" // whatsapp
 	"syscall"
@@ -13,51 +13,56 @@ import (
 	"github.com/apex/log/handlers/text"
 	"github.com/eludris-community/eludris.go/v2"
 	"github.com/eludris-community/eludris.go/v2/client"
-	"github.com/eludris-community/eludris.go/v2/events"
-	"github.com/eludris-community/eludris.go/v2/types"
+	// "github.com/eludris-community/eludris.go/v2/events"
+	// "github.com/eludris-community/eludris.go/v2/types"
+
+	"github.com/joho/godotenv"
 )
 
-func onMessage(msg *events.MessageCreate) {
-	c := msg.Client()
-	if msg.Author == "hello" {
-		return
-	}
+// func onMessage(msg *events.MessageCreate) {
+// 	c := msg.Client()
+// 	if msg.Author == "hello" {
+// 		return
+// 	}
 
-	switch msg.Content {
-	case "!speed":
-		_, err := c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: "I am the fastest ever."})
+// 	switch msg.Content {
+// 	case "!speed":
+// 		_, err := c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: "I am the fastest ever."})
 
-		if err != nil {
-			panic(err)
-		}
-	case "!cat":
-		file, err := os.Open("cat.jpg")
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 	case "!cat":
+// 		file, err := os.Open("cat.jpg")
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		defer file.Close()
 
-		data, err := c.Rest().UploadAttachment(file, false)
-		if err != nil {
-			panic(err)
-		}
-		log.Infof("%v", data)
-		_, err = c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: fmt.Sprintf("https://cdn.eludris.gay/%s", data.Id)})
-		if err != nil {
-			panic(err)
-		}
-	}
-}
+// 		data, err := c.Rest().UploadAttachment(file, false)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		log.Infof("%v", data)
+// 		_, err = c.Rest().CreateMessage(types.MessageCreate{Author: "googwuki", Content: fmt.Sprintf("https://cdn.eludris.gay/%s", data.Id)})
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 	}
+// }
 
 func main() {
-	HTTPUrl := os.Getenv("ELUDRIS_HTTP_URL")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	log.SetLevel(log.DebugLevel)
 	log.SetHandler(text.Default)
 
 	c, err := eludris.New(
-		client.WithEventManagerOpts(client.WithListenerFunc(onMessage)),
-		client.WithApiUrl(HTTPUrl),
+		os.Getenv("ELUDRIS_TOKEN"),
+		// client.WithEventManagerOpts(client.WithListenerFunc(onMessage)),
 		client.WithDefaultGateway(),
 	)
 

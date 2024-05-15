@@ -26,17 +26,9 @@ type clientImpl struct {
 }
 
 // BuildClient builds a client from a configuration.
-func BuildClient(config *Config) (Client, error) {
+func BuildClient(token string, config *Config) (Client, error) {
 	if config == nil {
 		return nil, types.ErrNoConfig
-	}
-
-	if config.Token == "" {
-		return nil, types.ErrNoToken
-	}
-
-	if config.ApiUrl == "" {
-		return nil, types.ErrNoApiUrl
 	}
 
 	client := &clientImpl{}
@@ -71,7 +63,7 @@ func BuildClient(config *Config) (Client, error) {
 			gateway.WithURL(config.WsUrl),
 		}, config.GatewayOpts...)
 
-		config.Gateway = gateway.New(config.Token, config.EventManager.HandleGatewayEvent, config.GatewayOpts...)
+		config.Gateway = gateway.New(token, config.EventManager.HandleGatewayEvent, config.GatewayOpts...)
 	}
 	client.gateway = config.Gateway
 

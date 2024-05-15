@@ -35,10 +35,10 @@ type gatewayImpl struct {
 	conn      *websocket.Conn
 	connMutex csync.Mutex
 
-	lastPingSent     time.Time
-	lastPongReceived time.Time
-	pingInterval     time.Duration
-	pingChan         chan struct{}
+	lastPingSent      time.Time
+	lastPongReceived  time.Time
+	pingInterval      time.Duration
+	authenticatedChan chan struct{}
 }
 
 func (g *gatewayImpl) Connect(ctx context.Context) error {
@@ -72,9 +72,9 @@ func (g *gatewayImpl) connectTries(ctx context.Context, try int) error {
 func (g *gatewayImpl) connect(ctx context.Context) error {
 	log.WithField("url", g.config.URL).Info("Connecting to gateway")
 	g.connMutex.CLock(ctx)
-	defer g.connMutex.Unlock()
 
 	if g.conn != nil {
+		g.connMutex.Unlock()
 		return types.ErrGatewayAlreadyConnected
 	}
 
@@ -101,12 +101,26 @@ func (g *gatewayImpl) connect(ctx context.Context) error {
 				"body": body,
 			},
 		).WithError(err).Error("error connecting to gateway")
+		g.connMutex.Unlock()
 		return err
 	}
 
 	g.conn = conn
-
+	g.connMutex.Unlock()
+	g.authenticatedChan = make(chan struct{})
 	go g.listen(conn)
+
+	timer := time.NewTimer(10 * time.Second)
+	select {
+	case <-ctx.Done():
+		timer.Stop()
+		return ctx.Err()
+	case <-timer.C:
+		timer.Stop()
+		return types.ErrGatewayTimeout
+	case <-g.authenticatedChan:
+	}
+	log.Info("authenticated to gateway")
 
 	return nil
 }
@@ -159,6 +173,12 @@ loop:
 			g.pingInterval = time.Duration(message.D.(pandemonium.Hello).HeartbeatInterval) * time.Millisecond
 			g.lastPongReceived = time.Now().UTC()
 			go g.ping()
+			go g.Send(context.Background(), pandemonium.AuthenticateOp, g.token)
+		}
+
+		if message.Op == pandemonium.AuthenticatedOp {
+			log.Info("authenticated to gateway")
+			close(g.authenticatedChan)
 		}
 
 		g.eventHandlerFunc(message.Op, message.D)
@@ -166,20 +186,16 @@ loop:
 }
 
 func (g *gatewayImpl) ping() {
-	if g.pingChan == nil {
-		g.pingChan = make(chan struct{})
-	}
 	pingTicker := time.NewTicker(g.pingInterval)
 	defer pingTicker.Stop()
 	defer log.Debug("stopping pinging")
 
 	for {
-		select {
-		case <-pingTicker.C:
-			go g.doPing()
-		case <-g.pingChan:
+		_, ok := <-pingTicker.C
+		if !ok {
 			return
 		}
+		g.doPing()
 	}
 }
 

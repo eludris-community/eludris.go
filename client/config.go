@@ -14,8 +14,6 @@ type ConfigOpt func(config *Config)
 // This allows you to set the URLs for your chosen Eludris instance.
 // These contain defaults, notably to the "official" Eludris instance https://eludris.gay.
 type Config struct {
-	// Token is the session token to use in both the HTTP API and WebSocket gateway.
-	Token string
 	// ApiUrl is the URL for the HTTP API, A.K.A "oprish".
 	ApiUrl string
 	// WSUrl is the URL for the WebSocket gateway, A.K.A "pandemonium".
@@ -38,6 +36,7 @@ type Config struct {
 func DefaultConfig(gatewayHandlers map[pandemonium.OpcodeType]GatewayEventHandler) *Config {
 	return &Config{
 		EventManagerOpts: []EventManagerOpt{WithGatewayHandlers(gatewayHandlers)},
+		ApiUrl:           "https://api.eludris.gay",
 	}
 }
 
