@@ -17,3 +17,8 @@ type RateLimit struct {
 	*GenericEvent
 	pandemonium.Ratelimit
 }
+
+type Authenticated struct {
+	*GenericEvent
+	pandemonium.Authenticated
+}

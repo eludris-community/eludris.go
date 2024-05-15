@@ -177,7 +177,6 @@ loop:
 		}
 
 		if message.Op == pandemonium.AuthenticatedOp {
-			log.Info("authenticated to gateway")
 			close(g.authenticatedChan)
 		}
 

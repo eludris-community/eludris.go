@@ -17,3 +17,7 @@ func gatewayHandlerHello(client client.Client, event pandemonium.Hello) {
 func gatewayHandlerRateLimit(client client.Client, event pandemonium.Ratelimit) {
 	client.EventManager().Dispatch(&events.RateLimit{GenericEvent: events.NewGenericEvent(client), Ratelimit: event})
 }
+
+func gatewayHandlerAuthenticated(client client.Client, event pandemonium.Authenticated) {
+	client.EventManager().Dispatch(&events.Authenticated{GenericEvent: events.NewGenericEvent(client), Authenticated: event})
+}

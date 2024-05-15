@@ -18,4 +18,8 @@ var allEventHandlers = []client.GatewayEventHandler{
 	client.NewGatewayEventHandler(pandemonium.HelloOp, gatewayHandlerHello),
 	client.NewGatewayEventHandler(pandemonium.RatelimitOp, gatewayHandlerRateLimit),
 	client.NewGatewayEventHandler(pandemonium.MessageCreateOp, gatewayHandlerMessageCreate),
+	client.NewGatewayEventHandler(pandemonium.UserCreateOp, gatewayHandlerUserCreate),
+	client.NewGatewayEventHandler(pandemonium.UserUpdateOp, gatewayHandlerUserUpdate),
+	client.NewGatewayEventHandler(pandemonium.PresenceUpdateOp, gatewayHandlerPresenceUpdate),
+	client.NewGatewayEventHandler(pandemonium.AuthenticatedOp, gatewayHandlerAuthenticated),
 }

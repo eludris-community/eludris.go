@@ -42,15 +42,15 @@ func (p *Payload) UnmarshalJSON(data []byte) error {
 		var d pandemonium.Authenticated
 		err = json.Unmarshal(raw.D, &d)
 		payloadData = d
-	case pandemonium.UserCreateOP:
+	case pandemonium.UserCreateOp:
 		var d pandemonium.UserCreate
 		err = json.Unmarshal(raw.D, &d)
 		payloadData = d
-	case pandemonium.UserUpdateOP:
+	case pandemonium.UserUpdateOp:
 		var d pandemonium.UserUpdate
 		err = json.Unmarshal(raw.D, &d)
 		payloadData = d
-	case pandemonium.PresenceUpdateOP:
+	case pandemonium.PresenceUpdateOp:
 		var d pandemonium.PresenceUpdate
 		err = json.Unmarshal(raw.D, &d)
 		payloadData = d
